@@ -2,6 +2,7 @@ import os
 import bpy
 from mathutils import Vector, Quaternion
 from szio.gta5.cwxml import clipdictionary as ycdxml
+from szio.gta5.jenkhash import try_resolve_maybe_hashed_name
 from ..sollumz_properties import SOLLUMZ_UI_NAMES, SollumType
 from ..tools.animationhelper import (
     Track,
@@ -299,7 +300,7 @@ def clip_to_obj(
              # which we already set in the clip_properties
 
     def _init_attribute(attr, xml_attr):
-        attr.name = xml_attr.name_hash
+        attr.name = try_resolve_maybe_hashed_name(xml_attr.name_hash)
         attr.type = xml_attr.type
         if attr.type == "Float":
             attr.value_float = xml_attr.value
@@ -311,13 +312,15 @@ def clip_to_obj(
             attr.value_vec3 = xml_attr.value
         elif attr.type == "Vector4":
             attr.value_vec4 = xml_attr.value
-        elif attr.type == "String" or attr.type == "HashString":
+        elif attr.type == "String":
             attr.value_string = xml_attr.value
+        elif attr.type == "HashString":
+            attr.value_string = try_resolve_maybe_hashed_name(xml_attr.value)
 
     clip_obj.clip_properties.tags.clear()
     for tag in clip.tags:
         clip_tag = clip_obj.clip_properties.tags.add()
-        clip_tag.name = tag.name_hash
+        clip_tag.name = try_resolve_maybe_hashed_name(tag.name_hash)
         clip_tag.ui_timeline_color = color_hash(clip_tag.name)
         clip_tag.start_phase = tag.start_phase
         clip_tag.end_phase = tag.end_phase
@@ -328,7 +331,7 @@ def clip_to_obj(
     clip_obj.clip_properties.properties.clear()
     for prop in clip.properties:
         clip_prop = clip_obj.clip_properties.properties.add()
-        clip_prop.name = prop.name_hash
+        clip_prop.name = try_resolve_maybe_hashed_name(prop.name_hash)
         for attr in prop.attributes:
             clip_prop_attr = clip_prop.attributes.add()
             _init_attribute(clip_prop_attr, attr)
